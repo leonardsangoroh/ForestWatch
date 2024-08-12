@@ -89,6 +89,12 @@ forest-project/
   }
   ```
 
+## Acoustic Sensors Simulation
+![alt text](Acoustic_Sensors.png)
+
+## Temperature Sensors Simulation
+![alt text](Temperature_Sensors.png)
+
 ## Future Enhancements
 
 - **Integrate with Nylas API:** Add functionality to send detailed email notifications using the Nylas API.
