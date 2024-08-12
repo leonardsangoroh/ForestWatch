@@ -15,6 +15,8 @@ class Event(db.Model):
     value = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.now)
     details = db.Column(db.String(200), nullable=True)
+    lat = db.Column(db.Float, nullable=True)
+    lon = db.Column(db.Float, nullable=True)
 
 with app.app_context():
     db.create_all()
@@ -26,7 +28,7 @@ def home():
 
 # Define a route to handle POST requests for logging sensor data
 @app.route('/events', methods=['POST'])
-def notify():
+def events():
     data = request.get_json()
     if not data or 'event' not in data:
         return jsonify({"error": "Invalid data"}), 400
@@ -35,7 +37,9 @@ def notify():
         event_type=data['event'],
         value=data['value'],
         timestamp=parse(data['timestamp']),  # Use parse instead of fromisoformat
-        details=data.get('details', 'No additional details')
+        details=data.get('details', 'No additional details'),
+        lat=data['location']['lat'],
+        lon=data['location']['lon']
     )
     db.session.add(event)
     db.session.commit()
