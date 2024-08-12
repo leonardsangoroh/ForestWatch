@@ -90,10 +90,10 @@ forest-project/
   ```
 
 ## Acoustic Sensors Simulation
-![alt text](Acoustic_Sensors.png)
+![alt text](assets/Images/Acoustic_Sensors.png)
 
 ## Temperature Sensors Simulation
-![alt text](Temperature_Sensors.png)
+![alt text](assets/Images/Temperature_Sensors.png)
 
 ## Future Enhancements
 

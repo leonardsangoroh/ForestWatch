@@ -1,7 +1,7 @@
 import sqlite3
 
 # Connect to the SQLite database
-conn = sqlite3.connect('instance/events.db')
+conn = sqlite3.connect('../instance/db_display.py')
 
 # Create a cursor object to interact with the database
 cursor = conn.cursor()
