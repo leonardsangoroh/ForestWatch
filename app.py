@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from dateutil.parser import parse
@@ -23,8 +23,9 @@ with app.app_context():
 
 # Define a route for the home page
 @app.route('/')
-def home():
-    return "Welcome to the Forest Project!"
+def dashboard():
+    events = Event.query.order_by(Event.timestamp.desc()).all()
+    return render_template('dashboard.html', events=events)
 
 # Define a route to handle POST requests for logging sensor data
 @app.route('/events', methods=['POST'])
@@ -64,6 +65,21 @@ def notify():
         return jsonify({"message": "Fire event detected and notification sent"}), 200
     else:
         return jsonify({"error": "Unknown event type"}), 400
+    
+
+@app.route('/allevents', methods=['GET'])
+def get_events():
+    events = Event.query.order_by(Event.timestamp.desc()).all()
+    event_list = [{
+        "id": event.id,
+        "event_type": event.event_type,
+        "value": event.value,
+        "timestamp": event.timestamp,
+        "details": event.details,
+        "lat": event.lat,
+        "lon": event.lon
+    } for event in events]
+    return jsonify(event_list)
 
 # Run the Flask app
 if __name__ == '__main__':
