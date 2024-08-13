@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForestWatch Correlation Analysis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        nav {
+            margin-bottom: 20px;
+        }
+        nav a {
+            margin-right: 10px;
+            text-decoration: none;
+            color: blue;
+        }
+        .chart {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ForestWatch Correlation Analysis</h1>
+
+    <nav>
+        <a href="{{ url_for('index') }}">Overview</a>
+        <a href="{{ url_for('event_log') }}">Event Log</a>
+        <a href="{{ url_for('geospatial') }}">Geospatial Visualization</a>
+        <a href="{{ url_for('time_series') }}">Time-Series Analysis</a>
+        <a href="{{ url_for('correlation') }}">Correlation Analysis</a>
+    </nav>
+
+    <div class="chart">
+        <h2>Correlation: Temperature vs Sound</h2>
+        <canvas id="correlationChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/correlation')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);  // Check the data format in the console
+
+                    const labels = data.timestamps || [];
+                    const tempValues = data.temperature || [];
+                    const soundValues = data.sound || [];
+
+                    if (labels.length > 0 && tempValues.length > 0 && soundValues.length > 0) {
+                        const correlationChartCtx = document.getElementById('correlationChart').getContext('2d');
+                        new Chart(correlationChartCtx, {
+                            type: 'scatter',
+                            data: {
+                                datasets: [{
+                                    label: 'Temperature vs Sound',
+                                    data: labels.map((timestamp, index) => ({
+                                        x: tempValues[index],
+                                        y: soundValues[index]
+                                    })),
+                                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'top',
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(tooltipItem) {
+                                                return `Temperature: ${tooltipItem.raw.x}°C, Sound: ${tooltipItem.raw.y} dB`;
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Temperature (°C)'
+                                        }
+                                    },
+                                    y: {
+                                        title: {
+                                            display: true,
+                                            text: 'Sound (dB)'
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        console.log('No data available for the chart.');
+                    }
+                })
+                .catch(error => console.error('Error fetching correlation data:', error));
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Series Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Time Series Data</h1>
+    <canvas id="timeSeriesChart" width="400" height="200"></canvas>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Get the canvas element
+            const ctx = document.getElementById('timeSeriesChart').getContext('2d');
+
+            // Initialize the chart
+            const timeSeriesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],  // Timestamps will go here
+                    datasets: [{
+                        label: 'Temperature',
+                        data: [],  // Temperature values will go here
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        fill: false,
+                    }, {
+                        label: 'Acoustic',
+                        data: [],  // Acoustic values will go here
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        fill: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'minute'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Value'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Function to fetch data and update the chart
+            function updateChart() {
+                fetch('/api/time_series')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Clear the existing data
+                        timeSeriesChart.data.labels = [];
+                        timeSeriesChart.data.datasets[0].data = [];
+                        timeSeriesChart.data.datasets[1].data = [];
+
+                        // Populate the chart with the new data
+                        data.forEach(event => {
+                            if (event.event_type === 'temperature') {
+                                timeSeriesChart.data.labels.push(event.timestamp);
+                                timeSeriesChart.data.datasets[0].data.push(event.value);
+                            } else if (event.event_type === 'acoustic') {
+                                timeSeriesChart.data.labels.push(event.timestamp);
+                                timeSeriesChart.data.datasets[1].data.push(event.value);
+                            }
+                        });
+
+                        // Update the chart
+                        timeSeriesChart.update();
+                    })
+                    .catch(error => console.error('Error fetching time series data:', error));
+            }
+
+            // Initial chart update
+            updateChart();
+
+            // Set interval to refresh the chart every 10 seconds
+            setInterval(updateChart, 10000);
+        });
+    </script>
+</body>
+</html>

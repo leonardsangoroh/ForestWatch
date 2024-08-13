@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForestWatch Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>ForestWatch Dashboard</h1>
+
+    <h2>Event Log</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Event Type</th>
+                <th>Value</th>
+                <th>Timestamp</th>
+                <th>Details</th>
+                <th>Location (Lat, Lon)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td>{{ event.id }}</td>
+                <td>{{ event.event_type }}</td>
+                <td>{{ event.value }}</td>
+                <td>{{ event.timestamp }}</td>
+                <td>{{ event.details }}</td>
+                <td>{{ event.lat }}, {{ event.lon }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+<script>
+    function fetchEvents() {
+        fetch('/allevents')
+            .then(response => response.json())
+            .then(events => {
+                const tbody = document.querySelector('tbody');
+                tbody.innerHTML = ''; // Clear existing rows
+                events.forEach(event => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${event.id}</td>
+                        <td>${event.event_type}</td>
+                        <td>${event.value}</td>
+                        <td>${event.timestamp}</td>
+                        <td>${event.details}</td>
+                        <td>${event.lat}, ${event.lon}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            });
+    }
+
+    setInterval(fetchEvents, 10000); // Fetch every 10 seconds
+</script>
+
+
+</html>
