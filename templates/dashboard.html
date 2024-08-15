@@ -1,151 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ForestWatch Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <title>Forest Monitoring Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        nav {
+
+        #map {
+            height: 500px;
             margin-bottom: 20px;
         }
-        nav a {
-            margin-right: 10px;
-            text-decoration: none;
-            color: blue;
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
         }
+
         .summary {
             margin-bottom: 20px;
         }
-        .chart {
-            margin-bottom: 20px;
-        }
     </style>
-</head>
-<body>
-    <h1>ForestWatch Dashboard</h1>
-
-    <nav>
-        <a href="{{ url_for('index') }}">Overview</a>
-        <a href="{{ url_for('event_log') }}">Event Log</a>
-        <a href="{{ url_for('geospatial') }}">Geospatial Visualization</a>
-        <a href="{{ url_for('time_series') }}">Time-Series Analysis</a>
-        <a href="{{ url_for('correlation') }}">Correlation Analysis</a>
-    </nav>
-
-    <div class="summary">
-        <h2>Overview</h2>
-        <p>Total Events: {{ total_events }}</p>
-        <p>Latest Event: {{ latest_event.event_type }} at {{ latest_event.timestamp }}</p>
-    </div>
-
-    <div class="chart">
-        <h2>Event Type Distribution</h2>
-        <canvas id="eventTypeChart"></canvas>
-    </div>
-
-    <div class="chart">
-        <h2>Temperature Over Time</h2>
-        <canvas id="temperatureChart"></canvas>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center my-4">Forest Monitoring Dashboard</h1>
+
+        <!-- Navigation Links -->
+        <nav class="mb-4">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Overview</a>
+            <a href="{{ url_for('event_log') }}" class="btn btn-primary">Event Log</a>
+            <a href="{{ url_for('geospatial') }}" class="btn btn-primary">Geospatial Visualization</a>
+            <a href="{{ url_for('time_series') }}" class="btn btn-primary">Time-Series Analysis</a>
+            <a href="{{ url_for('correlation') }}" class="btn btn-primary">Correlation Analysis</a>
+        </nav>
+
+        <!-- Map Visualization -->
+        <div id="map">
+            <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+            <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                    // Initialize the map
+                    const map = L.map('map').setView([0, 0], 2); // Center map and set zoom level
+        
+                    // Add a tile layer (OpenStreetMap)
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(map);
+        
+                    // Function to fetch and plot locations
+                    function fetchAndPlotData() {
+                        fetch('api/locations')
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log(data); // Check the data format in the console
+        
+                                // Clear existing markers
+                                map.eachLayer(layer => {
+                                    if (layer instanceof L.Marker) {
+                                        map.removeLayer(layer);
+                                    }
+                                });
+        
+                                // Plot new markers
+                                data.forEach(location => {
+                                    L.marker([location.lat, location.lon])
+                                        .addTo(map)
+                                        .bindPopup(`<b>${location.event_type}</b><br>Value: ${location.value}<br>Timestamp: ${location.timestamp}`);
+                                });
+                            })
+                            .catch(error => console.error('Error fetching location data:', error));
+                    }
+        
+                    // Initial data fetch
+                    fetchAndPlotData();
+        
+                    // Refresh data every 60 seconds
+                    setInterval(fetchAndPlotData, 60000);  // 60000 milliseconds = 60 seconds
+                });
+        
+            </script>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="summary row">
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Fetch and display statistics
+                    fetch('api/statistics')
+                        .then(response => response.json())
+                        .then(data => {
+                            const temperatureStats = data.temperature;
+                            const acousticStats = data.acoustic;
+            
+                            // Display temperature statistics
+                            document.getElementById('tempStats').innerHTML = `
+                                <strong>Temperature Statistics:</strong><br>
+                                Total Temperature Events: ${temperatureStats.count}<br>
+                                Min Temperature: ${temperatureStats.min} °C<br>
+                                Max Temperature: ${temperatureStats.max} °C<br>
+                                Average Temperature: ${temperatureStats.average.toFixed(2)} °C<br>
+                                Standard Deviation: ${temperatureStats.std_dev.toFixed(2)} °C
+                            `;
+            
+                            // Display acoustic statistics
+                            document.getElementById('acousticStats').innerHTML = `
+                                <strong>Acoustic Level Statistics:</strong><br>
+                                Total Acoustic Events: ${acousticStats.count}<br>
+                                Min Acoustic Level: ${acousticStats.min}<br>
+                                Max Acoustic Level: ${acousticStats.max}<br>
+                                Average Acoustic Level: ${acousticStats.average.toFixed(2)}<br>
+                                Standard Deviation: ${acousticStats.std_dev.toFixed(2)}
+                            `;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching statistics:', error);
+                            document.getElementById('tempStats').innerText = 'Error fetching temperature statistics.';
+                            document.getElementById('acousticStats').innerText = 'Error fetching acoustic statistics.';
+                        });
+                });
+            </script>
+            
+            
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Temperature Statistics</h5>
+                        <p id="tempStats" class="card-text"></p>                      
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Acoustic Level Statistics</h5>
+                        <p id="acousticStats" class="card-text"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Series Charts -->
+        <div class="row mb-4">
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Fetch and plot temperature data
+                    fetch('api/temperature_over_time')
+                        .then(response => response.json())
+                        .then(data => {
+                            const labels = data.dates;  // Array of dates
+                            const values = data.values; // Array of temperature values
+            
+                            // Get the context for the temperature chart
+                            const ctx = document.getElementById('temperatureChart').getContext('2d');
+            
+                            // Create the temperature chart
+                            new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: 'Temperature Over Time',
+                                        data: values,
+                                        borderColor: 'rgba(255, 99, 132, 1)',
+                                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                        fill: false,
+                                        borderWidth: 2,
+                                        pointRadius: 5,
+                                        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    plugins: {
+                                        legend: {
+                                            position: 'top',
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function (tooltipItem) {
+                                                    return `Temperature: ${tooltipItem.raw} °C`;
+                                                }
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: 'Date'
+                                            },
+                                            ticks: {
+                                                autoSkip: true,
+                                                maxTicksLimit: 10
+                                            }
+                                        },
+                                        y: {
+                                            title: {
+                                                display: true,
+                                                text: 'Temperature (°C)'
+                                            },
+                                            ticks: {
+                                                beginAtZero: true
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching temperature data:', error);
+                            document.getElementById('temperatureChart').innerText = 'Error fetching temperature data.';
+                        });
+                });
+            </script>
+            <div class="col-lg-6 chart-container">
+                <h2>Temperature Over Time</h2>
+                <canvas id="temperatureChart"> </canvas>
+            </div>
+  
+            <div class="col-lg-6 chart-container">
+                <h2>Acoustic Level Over Time</h2>
+                <canvas id="acousticChart"></canvas>
+            </div>
+        </div>
+
+        <br>
+        <br>
+        <br>
+        <br>
+
+        <!-- Chart -->
+        <div class="chart-container">
+            <h2>Temperature vs Acoustic Level Correlation</h2>
+            <canvas id="correlationChart"></canvas>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    fetch('api/correlation')
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data);  // Check the data format in the console
+
+                            const labels = data.timestamps || [];
+                            const tempValues = data.temperature || [];
+                            const soundValues = data.sound || [];
+
+                            if (labels.length > 0 && tempValues.length > 0 && soundValues.length > 0) {
+                                const correlationChartCtx = document.getElementById('correlationChart').getContext('2d');
+                                new Chart(correlationChartCtx, {
+                                    type: 'scatter',
+                                    data: {
+                                        datasets: [{
+                                            label: 'Temperature vs Sound',
+                                            data: labels.map((timestamp, index) => ({
+                                                x: tempValues[index],
+                                                y: soundValues[index]
+                                            })),
+                                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                            borderColor: 'rgba(255, 99, 132, 1)',
+                                            borderWidth: 1
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        plugins: {
+                                            legend: {
+                                                position: 'top',
+                                            },
+                                            tooltip: {
+                                                callbacks: {
+                                                    label: function(tooltipItem) {
+                                                        return `Temperature: ${tooltipItem.raw.x}°C, Sound: ${tooltipItem.raw.y} dB`;
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        scales: {
+                                            x: {
+                                                title: {
+                                                    display: true,
+                                                    text: 'Temperature (°C)'
+                                                }
+                                            },
+                                            y: {
+                                                title: {
+                                                    display: true,
+                                                    text: 'Sound (dB)'
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            } else {
+                                console.log('No data available for the chart.');
+                            }
+                        })
+                        .catch(error => console.error('Error fetching correlation data:', error));
+                });
+
+            </script>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Fetch event type data
-            fetch('/api/event_types')
+        document.addEventListener('DOMContentLoaded', function () {
+            // Fetch and display map data
+            fetch('http://127.0.0.1:5000/api/locations')
                 .then(response => response.json())
                 .then(data => {
-                    const labels = Object.keys(data);
-                    const values = Object.values(data);
+                    const map = L.map('map').setView([data[0].lat, data[0].lon], 6);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                    }).addTo(map);
+                    data.forEach(location => {
+                        L.marker([location.lat, location.lon])
+                            .addTo(map)
+                            .bindPopup(`<b>${location.event_type}</b><br>${location.value} - ${location.timestamp}`);
+                    });
+                });
 
-                    const eventTypeChartCtx = document.getElementById('eventTypeChart').getContext('2d');
-                    new Chart(eventTypeChartCtx, {
-                        type: 'pie',
+            // Fetch and display temperature over time chart
+            fetch('http://127.0.0.1:5000/api/temperature_over_time')
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('temperatureChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
                         data: {
-                            labels: labels,
+                            labels: data.dates,
                             datasets: [{
-                                label: 'Event Types',
-                                data: values,
+                                label: 'Temperature',
+                                data: data.values,
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }]
+                        }
+                    });
+                });
+
+            // Fetch and display acoustic level over time chart
+            fetch('api/time_series')
+                .then(response => response.json())
+                .then(data => {
+                    const acousticData = data.filter(event => event.event_type === 'acoustic');
+                    const ctx = document.getElementById('acousticChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: acousticData.map(event => event.timestamp),
+                            datasets: [{
+                                label: 'Acoustic Level',
+                                data: acousticData.map(event => event.value),
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        }
+                    });
+                });
+
+            // Fetch and display scatter plot (correlation)
+            fetch('http://127.0.0.1:5000/api/correlation')
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('scatterPlot').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'scatter',
+                        data: {
+                            labels: data.timestamps,
+                            datasets: [{
+                                label: 'Temperature vs Acoustic Level',
+                                data: data.temperature.map((temp, index) => ({
+                                    x: temp,
+                                    y: data.sound[index]
+                                })),
                                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                                 borderColor: 'rgba(75, 192, 192, 1)',
                                 borderWidth: 1
                             }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(tooltipItem) {
-                                            return tooltipItem.label + ': ' + tooltipItem.raw;
-                                        }
-                                    }
-                                }
-                            }
                         }
                     });
                 });
 
-            // Fetch temperature data
-            fetch('/api/temperature_over_time')
+            // Fetch and display summary statistics
+            fetch('http://localhost:5000/api/event_types')
                 .then(response => response.json())
                 .then(data => {
-                    const labels = data.dates;
-                    const values = data.values;
-
-                    const temperatureChartCtx = document.getElementById('temperatureChart').getContext('2d');
-                    new Chart(temperatureChartCtx, {
-                        type: 'line',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: 'Temperature',
-                                data: values,
-                                borderColor: 'rgba(255, 99, 132, 1)',
-                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                                fill: false
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(tooltipItem) {
-                                            return tooltipItem.dataset.label + ': ' + tooltipItem.raw + '°C';
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Date'
-                                    }
-                                },
-                                y: {
-                                    title: {
-                                        display: true,
-                                        text: 'Temperature (°C)'
-                                    }
-                                }
-                            }
-                        }
-                    });
+                    document.getElementById('tempStats').innerText = `Total Temperature Events: ${data.temperature || 0}`;
+                    document.getElementById('acousticStats').innerText = `Total Acoustic Events: ${data.acoustic || 0}`;
                 });
         });
     </script>
 </body>
+
 </html>
