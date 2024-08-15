@@ -2,9 +2,13 @@ from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from dateutil.parser import parse
+from flask_cors import CORS  # Import the CORS module
+import statistics
 
 # Create a Flask app instance
 app = Flask(__name__)
+CORS(app)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///events.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -25,7 +29,14 @@ with app.app_context():
 def index():
     total_events = Event.query.count()
     latest_event = Event.query.order_by(Event.timestamp.desc()).first()
-    return render_template('dashboard.html', total_events=total_events, latest_event=latest_event)
+    return render_template('overview.html', total_events=total_events, latest_event=latest_event)
+
+#dashboardOne route
+@app.route('/dashboard') # ✅
+def indexDashboard():
+    total_events = Event.query.count()
+    latest_event = Event.query.order_by(Event.timestamp.desc()).first()
+    return render_template('dashboard.html')
 
 # Define a route to handle POST requests for logging sensor data ✅
 @app.route('/events', methods=['POST'])
@@ -168,6 +179,45 @@ def get_time_series_data():
         })
     
     return jsonify(data)
+
+#statistics
+@app.route('/api/statistics', methods=['GET'])
+def get_statistics():
+    # Fetch temperature and acoustic values from the database
+    temperature_events = Event.query.filter_by(event_type='temperature').all()
+    acoustic_events = Event.query.filter_by(event_type='acoustic').all()
+    
+    # Extract values
+    temperature_values = [event.value for event in temperature_events]
+    acoustic_values = [event.value for event in acoustic_events]
+    
+    # Calculate statistics
+    def calculate_stats(values):
+        if not values:
+            return {
+                'min': None,
+                'max': None,
+                'average': None,
+                'std_dev': None,
+                'count': 0
+            }
+        return {
+            'min': min(values),
+            'max': max(values),
+            'average': sum(values) / len(values),
+            'std_dev': statistics.stdev(values) if len(values) > 1 else 0,
+            'count': len(values)
+        }
+    
+    temperature_stats = calculate_stats(temperature_values)
+    acoustic_stats = calculate_stats(acoustic_values)
+    
+    # Return statistics as JSON
+    return jsonify({
+        'temperature': temperature_stats,
+        'acoustic': acoustic_stats
+    })
+
 
 
 # Run the Flask app
