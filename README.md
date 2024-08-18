@@ -133,12 +133,6 @@ The user interface is accessible via mobile devices, thanks to the integration w
 ## Endpoints
 The routes and endpoints used during the implementation of this project are found in app.py file
 
-## Acoustic Sensors Simulation
-![alt text](assets/Images/Acoustic_Sensors.png)
-
-## Temperature Sensors Simulation
-![alt text](assets/Images/Temperature_Sensors.png)
-
 ## Future Enhancements
 
 - [x] **Integrate with Nylas API:** Add functionality to send detailed email notifications using the Nylas API.
