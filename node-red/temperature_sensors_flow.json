@@ -1,0 +1,552 @@
+[
+    {
+        "id": "2671b5e3f18f63db",
+        "type": "inject",
+        "z": "e187c4ddc96a1e19",
+        "name": "Temperature Sensor 3",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 320,
+        "wires": [
+            [
+                "dad07fda3c6d102b"
+            ]
+        ]
+    },
+    {
+        "id": "dad07fda3c6d102b",
+        "type": "function",
+        "z": "e187c4ddc96a1e19",
+        "name": "Temp. Reading(s)",
+        "func": "// random coordinate\nconst generateCoordinate = (min, max) => (Math.random() * (max - min) + min).toFixed(4);\n\nconst location = {\n    lat: generateCoordinate(-4, 4),  // Latitude range around equator\n    lon: generateCoordinate(34, 40)  // Longitude range for East Africa\n};\n\nmsg.payload = {\n    event: 'temperature',\n    value: Math.floor(Math.random() * 20) + 20,  // Simulate temperature between 20 and 40 degrees Celsius\n    timestamp: new Date().toISOString(),\n    location: location\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 320,
+        "wires": [
+            [
+                "1fb3eb87da0ad2f7",
+                "8826a6cc9a3cb922",
+                "5724feaf7b7bf321",
+                "732d2906d1635ddd",
+                "8f523f69cee84e93"
+            ]
+        ]
+    },
+    {
+        "id": "1fb3eb87da0ad2f7",
+        "type": "http request",
+        "z": "e187c4ddc96a1e19",
+        "name": "toDatabase( )",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://127.0.0.1:5000/events",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 890,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8826a6cc9a3cb922",
+        "type": "function",
+        "z": "e187c4ddc96a1e19",
+        "name": "Temperature Check",
+        "func": "if (msg.payload.value > 30) { // Example threshold\n    var salutation = \"Sir/Madam\"\n    var email_address = global.get('email_address')\n    var full_name = global.get('full_name')\n    msg.payload = {\n        to: [{ \"email\": email_address }],\n        subject: \"Urgent: Forest Fire Detected\",\n        body: `Dear ${salutation}, <br> <br>\n        This is an urgent alert from the ForestWatch monitoring system.<br><br>\n        <strong>Incident: Potential Forest Fire Detected</strong><br>\n        Location: Latitude: ${msg.payload.location.lat}, Longitude: ${msg.payload.location.lon}<br>\n        Date & Time: ${msg.payload.timestamp}<br><br>\n        Details: <br>\n        The temperature in the area has reached a critical level of ${msg.payload.value}°C, which indicates a potential forest fire. Immediate action is required to prevent any further escalation.<br><br>\n        Recommended Actions:<br>\n        - Deploy firefighting teams to the affected area.<br>\n        - Alert local authorities and emergency services.<br>\n        - Evacuate nearby residents if necessary.<br><br>\n        <strong>Please treat this alert with the highest priority to ensure the safety of the environment and surrounding communities.</strong><br><br>\n        Sincerely,<br>ForestWatch Monitoring Team <br> \n        leonardsangoroh@gmail.com`\n    };\n    return msg;\n\n} else {\n    return null; // No action needed\n}\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 910,
+        "y": 380,
+        "wires": [
+            [
+                "3c5a4599abd42a50",
+                "ca132aedabf301c7"
+            ]
+        ]
+    },
+    {
+        "id": "3c5a4599abd42a50",
+        "type": "http request",
+        "z": "e187c4ddc96a1e19",
+        "name": "Send Email",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.us.nylas.com/v3/grants/1100d579-b94a-408b-94b7-ec53085d46c3\t/messages/send",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "bearer",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Accept",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            },
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
+        "x": 1110,
+        "y": 380,
+        "wires": [
+            [
+                "83afd58ac47bfa7c"
+            ]
+        ]
+    },
+    {
+        "id": "5724feaf7b7bf321",
+        "type": "debug",
+        "z": "e187c4ddc96a1e19",
+        "name": "Debug (Temp. Sensor)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "3c39e7eb85c71da0",
+        "type": "inject",
+        "z": "e187c4ddc96a1e19",
+        "name": "Temperature Sensor 4",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 520,
+        "wires": [
+            [
+                "dad07fda3c6d102b"
+            ]
+        ]
+    },
+    {
+        "id": "7fc17faa297dd991",
+        "type": "inject",
+        "z": "e187c4ddc96a1e19",
+        "name": "Temperature Sensor 5",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 420,
+        "y": 660,
+        "wires": [
+            [
+                "dad07fda3c6d102b"
+            ]
+        ]
+    },
+    {
+        "id": "b392ed280eb56e44",
+        "type": "inject",
+        "z": "e187c4ddc96a1e19",
+        "name": "Temperature Sensor 2",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 440,
+        "y": 40,
+        "wires": [
+            [
+                "dad07fda3c6d102b"
+            ]
+        ]
+    },
+    {
+        "id": "b0d4dd91101f1c7d",
+        "type": "inject",
+        "z": "e187c4ddc96a1e19",
+        "name": "Temperature Sensor 1",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 160,
+        "wires": [
+            [
+                "dad07fda3c6d102b"
+            ]
+        ]
+    },
+    {
+        "id": "9ffd1d4bf3cd0894",
+        "type": "http request",
+        "z": "e187c4ddc96a1e19",
+        "name": "getMailContact",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://api.us.nylas.com/v3/grants/1100d579-b94a-408b-94b7-ec53085d46c3/contacts/c7084871012511169548",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "bearer",
+        "senderr": false,
+        "headers": [],
+        "x": 360,
+        "y": 840,
+        "wires": [
+            [
+                "7b6a8fd110aeb317",
+                "15cbbf9774ece178"
+            ]
+        ]
+    },
+    {
+        "id": "7b6a8fd110aeb317",
+        "type": "debug",
+        "z": "e187c4ddc96a1e19",
+        "name": "Display on debug panel",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "15cbbf9774ece178",
+        "type": "function",
+        "z": "e187c4ddc96a1e19",
+        "name": "getNameAndEmail( )",
+        "func": "// Assuming the response is in msg.payload\nlet response = msg.payload;\n\n// Extract the given name and surname\nlet givenName = response.data.given_name;\nlet surname = response.data.surname;\n\n// Extract the first email address (you can change this if you need another email)\nlet email = response.data.emails[0].email;\n\n// Store the extracted information in msg.payload\nmsg.payload = {\n    \"name\": givenName + \" \" + surname,\n    \"email\": email\n};\n\n//global variables\nglobal.set('full_name',givenName + ' ' + surname)\nglobal.set('email_address', email)\n\n// Output the result\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 920,
+        "wires": [
+            [
+                "59ef7f1633851e3e"
+            ]
+        ]
+    },
+    {
+        "id": "59ef7f1633851e3e",
+        "type": "debug",
+        "z": "e187c4ddc96a1e19",
+        "name": "Show name and email",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "d85a09b02c19e731",
+        "type": "inject",
+        "z": "e187c4ddc96a1e19",
+        "name": "Daily Trigger",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "86400",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 840,
+        "wires": [
+            [
+                "9ffd1d4bf3cd0894"
+            ]
+        ]
+    },
+    {
+        "id": "eb3dc7a343eee487",
+        "type": "remote-access",
+        "z": "e187c4ddc96a1e19",
+        "confignode": "60b39c33a04b5296",
+        "name": "",
+        "verbose": 0,
+        "x": 140,
+        "y": 920,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "ca132aedabf301c7",
+        "type": "remote-notification",
+        "z": "e187c4ddc96a1e19",
+        "confignode": "60b39c33a04b5296",
+        "name": "",
+        "notificationTitle": "payload.subject",
+        "notificationTitleType": "msg",
+        "notificationBody": "There might be a forest fire!",
+        "notificationBodyType": "str",
+        "notificationSound": "siren",
+        "notificationSoundComputed": "payload.sound",
+        "notificationSoundComputedType": "msg",
+        "output": 1,
+        "x": 1130,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a41cd97f7b3708e2",
+        "type": "twilio out",
+        "z": "e187c4ddc96a1e19",
+        "twilio": "64809b35830fe18f",
+        "twilioType": "sms",
+        "url": "",
+        "number": "+254794807156",
+        "name": "",
+        "x": 1170,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "732d2906d1635ddd",
+        "type": "function",
+        "z": "e187c4ddc96a1e19",
+        "name": "messageBody( )",
+        "func": "if (msg.payload.value > 30) { // Example threshold\n    var email_address = global.get('email_address')\n    var full_name = global.get('full_name')\n    msg.payload = {\n        subject: \"Urgent: Forest Fire Detected! Check details on email\"\n    };\n    return msg;\n\n} else {\n    return null; // No action needed\n}\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 560,
+        "wires": [
+            [
+                "a41cd97f7b3708e2"
+            ]
+        ]
+    },
+    {
+        "id": "b5045b2ee56940c7",
+        "type": "http request",
+        "z": "e187c4ddc96a1e19",
+        "name": "toCalendar( )",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.us.nylas.com/v3/grants/1100d579-b94a-408b-94b7-ec53085d46c3/events?calendar_id=leonardsangoroh@gmail.com",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "bearer",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Accept",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            },
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
+        "x": 1230,
+        "y": 680,
+        "wires": [
+            [
+                "d23bfaf68e16ce47"
+            ]
+        ]
+    },
+    {
+        "id": "d23bfaf68e16ce47",
+        "type": "debug",
+        "z": "e187c4ddc96a1e19",
+        "name": "Event Scheduled",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1450,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "8f523f69cee84e93",
+        "type": "function",
+        "z": "e187c4ddc96a1e19",
+        "name": "calendarEventContent( )",
+        "func": "const currentTime = Math.floor(Date.now() / 1000)\n\nif (msg.payload.value > 30) { // Example threshold\n    msg.payload = {\n        \"title\": \"Potential Forest Fire\",\n        \"status\": \"confirmed\",\n        \"busy\": true,\n        \"participants\": [\n            {\n                \"name\": \"Leonard Sangoroh\",\n                \"email\": \"leonardsangoroh@gmail.com\"\n            }\n        ],\n        \"description\": \"Take Necessary Action to curb the Forest Fire\",\n        \"when\": {\n            \"time\": currentTime\n        },\n        \"location\": \"On-the-ground response\"\n    }\n    return msg;\n\n} else {\n    return null; // No action needed\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 990,
+        "y": 680,
+        "wires": [
+            [
+                "b5045b2ee56940c7"
+            ]
+        ]
+    },
+    {
+        "id": "83afd58ac47bfa7c",
+        "type": "debug",
+        "z": "e187c4ddc96a1e19",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1300,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "60b39c33a04b5296",
+        "type": "remote-config",
+        "name": "Node-RED UI",
+        "host": "localhost",
+        "protocol": "http",
+        "port": "1880",
+        "baseurl": "/test",
+        "instancehash": "3rdd6nue47b6smyjzbmtxftvy4g3ls6nmymeo2lyar5c8s7453fqbcccb3sz6ihx",
+        "server": "nodered02.remote-red.com",
+        "region": "de"
+    },
+    {
+        "id": "64809b35830fe18f",
+        "type": "twilio-api",
+        "name": "",
+        "sid": "AC01164d1c6bac53aa0bb1d4ce957e6f99",
+        "from": "+13343730825"
+    }
+]

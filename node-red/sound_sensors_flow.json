@@ -1,0 +1,354 @@
+[
+    {
+        "id": "11fd52f475315098",
+        "type": "inject",
+        "z": "5243fefb7334ded1",
+        "name": "Sound Sensor 3",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 200,
+        "y": 320,
+        "wires": [
+            [
+                "742e87e7289c0366"
+            ]
+        ]
+    },
+    {
+        "id": "742e87e7289c0366",
+        "type": "function",
+        "z": "5243fefb7334ded1",
+        "name": "Simulate Noise Level(s)",
+        "func": "// random coordinate\nconst generateCoordinate = (min, max) => (Math.random() * (max - min) + min).toFixed(4);\n\nconst location = {\n    lat: generateCoordinate(-4, 4),  // Latitude range around equator\n    lon: generateCoordinate(34, 40)  // Longitude range for East Africa\n};\n\nmsg.payload = {\n    event: 'acoustic',\n    value: Math.floor(Math.random() * 120), \n     // Simulate noise level between 0 and 120 dB\n    timestamp: new Date().toISOString(),\n    location: location\n};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 320,
+        "wires": [
+            [
+                "03b9faf3cd7b396a",
+                "31b27c15ec65df1c",
+                "6db88970be3ce6be",
+                "ecad3d74d63445a5"
+            ]
+        ]
+    },
+    {
+        "id": "03b9faf3cd7b396a",
+        "type": "http request",
+        "z": "5243fefb7334ded1",
+        "name": "toDatabase( )",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://127.0.0.1:5000/events",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 850,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "31b27c15ec65df1c",
+        "type": "function",
+        "z": "5243fefb7334ded1",
+        "name": "Noise Level Check",
+        "func": "if (msg.payload.value > 100) { // Example threshold\n    var salutation = \"Sir/Madam\"\n    msg.payload = {\n        to: [{ \"email\": \"leonardsangoroh@gmail.com\" }],\n        subject: \"Alert: Potential Deforestation Activity Detected\",\n        body: `Dear ${salutation},<br><br>\n           This is an alert from the ForestWatch monitoring system.<br><br>\n           <strong>Incident:</strong> Potential Illegal Logging Detected<br>\n           <strong>Location:</strong> Latitude: ${msg.payload.location.lat}, Longitude: ${msg.payload.location.lon}<br>\n           <strong>Date & Time:</strong> ${msg.payload.timestamp}<br><br>\n           <strong>Details:</strong><br>\n           The acoustic sensor has detected sound levels consistent with chainsaw activity in the monitored area, indicating possible illegal logging.<br><br>\n           <strong>Recommended Actions:</strong><br>\n           - Dispatch a patrol team to investigate the situation.<br>\n           - Notify local law enforcement authorities.<br>\n           - Increase monitoring of the area to prevent further activity.<br><br>\n           Your prompt attention to this matter is crucial to protecting our forest resources.<br><br>\n           Sincerely,<br>\n           ForestWatch Monitoring Team<br>\n           leonardsangoroh@gmail.com`\n    };\n\n    return msg;\n\n} else {\n    return null; // No action needed\n}\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 870,
+        "y": 380,
+        "wires": [
+            [
+                "4c7995d892abfe45",
+                "f245a3a0723922c5"
+            ]
+        ]
+    },
+    {
+        "id": "4c7995d892abfe45",
+        "type": "http request",
+        "z": "5243fefb7334ded1",
+        "name": "Send Email",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.us.nylas.com/v3/grants/1100d579-b94a-408b-94b7-ec53085d46c3\t/messages/send",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "bearer",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Accept",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            },
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
+        "x": 1070,
+        "y": 380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6db88970be3ce6be",
+        "type": "debug",
+        "z": "5243fefb7334ded1",
+        "name": "Debug (Acoustic Sensor)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 890,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "b992982b206c1931",
+        "type": "inject",
+        "z": "5243fefb7334ded1",
+        "name": "Sound Sensor 2",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 240,
+        "y": 160,
+        "wires": [
+            [
+                "742e87e7289c0366"
+            ]
+        ]
+    },
+    {
+        "id": "f4479712e12dd0b7",
+        "type": "inject",
+        "z": "5243fefb7334ded1",
+        "name": "Sound Sensor 1",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 540,
+        "y": 100,
+        "wires": [
+            [
+                "742e87e7289c0366"
+            ]
+        ]
+    },
+    {
+        "id": "eef490097cae2156",
+        "type": "inject",
+        "z": "5243fefb7334ded1",
+        "name": "Sound Sensor 4",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 220,
+        "y": 500,
+        "wires": [
+            [
+                "742e87e7289c0366"
+            ]
+        ]
+    },
+    {
+        "id": "efbb77ea33d096c8",
+        "type": "inject",
+        "z": "5243fefb7334ded1",
+        "name": "Sound Sensor 5",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 520,
+        "y": 580,
+        "wires": [
+            [
+                "742e87e7289c0366"
+            ]
+        ]
+    },
+    {
+        "id": "4974e1df6ca1ef6a",
+        "type": "http request",
+        "z": "5243fefb7334ded1",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.us.nylas.com/v3/grants/1100d579-b94a-408b-94b7-ec53085d46c3/events?calendar_id=leonardsangoroh@gmail.com",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "bearer",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Accept",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            },
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            }
+        ],
+        "x": 1130,
+        "y": 540,
+        "wires": [
+            [
+                "62248341a46b0edd"
+            ]
+        ]
+    },
+    {
+        "id": "ecad3d74d63445a5",
+        "type": "function",
+        "z": "5243fefb7334ded1",
+        "name": "calendarEventContent( )",
+        "func": "const currentTime = Math.floor(Date.now() / 1000)\n\nif (msg.payload.value > 100) { // Example threshold\n    msg.payload = {\n        \"title\": \"Potential Deforestation Happening\",\n        \"status\": \"confirmed\",\n        \"busy\": true,\n        \"participants\": [\n            {\n                \"name\": \"Leonard Sangoroh\",\n                \"email\": \"leonardsangoroh@gmail.com\"\n            }\n        ],\n        \"description\": \"Take Necessary Action to curb Deforestation\",\n        \"when\": {\n            \"time\": currentTime\n        },\n        \"location\": \"On-the-ground response\"\n    }\n    return msg;\n\n} else {\n    return null; // No action needed\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 890,
+        "y": 540,
+        "wires": [
+            [
+                "4974e1df6ca1ef6a"
+            ]
+        ]
+    },
+    {
+        "id": "f245a3a0723922c5",
+        "type": "remote-notification",
+        "z": "5243fefb7334ded1",
+        "confignode": "60b39c33a04b5296",
+        "name": "",
+        "notificationTitle": "payload.subject",
+        "notificationTitleType": "msg",
+        "notificationBody": "There might be deforestation activity!",
+        "notificationBodyType": "str",
+        "notificationSound": "siren",
+        "notificationSoundComputed": "payload.sound",
+        "notificationSoundComputedType": "msg",
+        "output": 1,
+        "x": 1090,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "60b39c33a04b5296",
+        "type": "remote-config",
+        "name": "Node-RED UI",
+        "host": "localhost",
+        "protocol": "http",
+        "port": "1880",
+        "baseurl": "/test",
+        "instancehash": "3rdd6nue47b6smyjzbmtxftvy4g3ls6nmymeo2lyar5c8s7453fqbcccb3sz6ihx",
+        "server": "nodered02.remote-red.com",
+        "region": "de"
+    }
+]
