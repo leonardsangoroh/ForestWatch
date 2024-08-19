@@ -97,9 +97,8 @@ The user interface is accessible via mobile devices, thanks to the integration w
    ```
 
 3. **Install Dependencies:**
-
-   ```bash
-   pip install -r requirements.txt
+   ```Python
+   #install all modules imported in app.py 
    ```
 
 4. **Run the application:**
